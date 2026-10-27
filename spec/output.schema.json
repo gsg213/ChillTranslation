@@ -1,0 +1,159 @@
+{
+  "$defs": {
+    "Annotation": {
+      "additionalProperties": false,
+      "properties": {
+        "span": {
+          "description": "Exact substring of the variant text.",
+          "minLength": 1,
+          "title": "Span",
+          "type": "string"
+        },
+        "tag": {
+          "$ref": "#/$defs/TagId"
+        },
+        "note": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "span",
+        "tag",
+        "note"
+      ],
+      "title": "Annotation",
+      "type": "object"
+    },
+    "TagId": {
+      "enum": [
+        "tutoiement",
+        "vouvoiement",
+        "vous_pluriel",
+        "sujet_obligatoire",
+        "partitif",
+        "auxiliaire_etre",
+        "genre_divergent",
+        "a_personnel",
+        "aimer_gustar",
+        "duree_depuis",
+        "faux_ami_es",
+        "calque_espagnol",
+        "ne_omis",
+        "negation_complete",
+        "ne_expletif",
+        "question_inversion",
+        "question_est_ce_que",
+        "question_intonation",
+        "interrogatif_in_situ",
+        "conditionnel_politesse",
+        "subjonctif",
+        "passe_compose_imparfait",
+        "on_nous",
+        "clitiques_ordre",
+        "en_y",
+        "ca_cela",
+        "dislocation",
+        "c_est_il_est",
+        "elision_orale",
+        "abreviation_sms",
+        "lexique_familier",
+        "lexique_soutenu",
+        "verlan",
+        "expression_idiomatique",
+        "formule_politesse",
+        "marqueur_discursif",
+        "accord_genre",
+        "accord_participe",
+        "preposition"
+      ],
+      "title": "TagId",
+      "type": "string"
+    },
+    "Variant": {
+      "additionalProperties": false,
+      "description": "`text` comes before `annotations` so the model writes the sentence first.",
+      "properties": {
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "annotations": {
+          "items": {
+            "$ref": "#/$defs/Annotation"
+          },
+          "maxItems": 4,
+          "title": "Annotations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "annotations"
+      ],
+      "title": "Variant",
+      "type": "object"
+    },
+    "Variants": {
+      "additionalProperties": false,
+      "properties": {
+        "soutenu": {
+          "$ref": "#/$defs/Variant"
+        },
+        "courant": {
+          "$ref": "#/$defs/Variant"
+        },
+        "amical": {
+          "$ref": "#/$defs/Variant"
+        },
+        "familier": {
+          "$ref": "#/$defs/Variant"
+        }
+      },
+      "required": [
+        "soutenu",
+        "courant",
+        "amical",
+        "familier"
+      ],
+      "title": "Variants",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Analysis of the source first, so the variants are conditioned on it.\n\n`source_address` is what the Spanish source uses to address someone. It is\nreported, never obeyed: all four registers are produced regardless. On\nCoCoA-MT it can be scored against the human formal/informal labels.",
+  "properties": {
+    "source_address": {
+      "enum": [
+        "tu",
+        "usted",
+        "vos",
+        "plural",
+        "none",
+        "ambiguous"
+      ],
+      "title": "Source Address",
+      "type": "string"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "variants": {
+      "$ref": "#/$defs/Variants"
+    }
+  },
+  "required": [
+    "source_address",
+    "variants"
+  ],
+  "title": "TranslationOutput",
+  "type": "object"
+}

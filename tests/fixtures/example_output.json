@@ -1,0 +1,46 @@
+{
+  "input": {
+    "source": "¿Me puedes mandar el archivo antes del viernes? No creo que tenga tiempo este fin de semana.",
+    "source_lang": "es",
+    "speaker_gender": "m"
+  },
+  "output": {
+    "source_address": "tu",
+    "assumptions": ["The source uses tú to one person; all four registers are given anyway."],
+    "variants": {
+      "soutenu": {
+        "text": "Pourriez-vous m'envoyer le fichier avant vendredi ? Je ne pense pas avoir le temps ce week-end.",
+        "annotations": [
+          {"span": "Pourriez-vous", "tag": "conditionnel_politesse", "note": "The conditional softens the request, like ¿Podría…? in Spanish."},
+          {"span": "Pourriez-vous", "tag": "question_inversion", "note": "Verb-hyphen-subject inversion marks a careful, written question."},
+          {"span": "Je ne pense pas avoir", "tag": "negation_complete", "note": "Formal French keeps ne … pas, where Spanish needs only no. With the same subject, penser + infinitive replaces the que + subjunctive clause."}
+        ]
+      },
+      "courant": {
+        "text": "Est-ce que vous pouvez m'envoyer le fichier avant vendredi ? Je ne pense pas avoir le temps ce week-end.",
+        "annotations": [
+          {"span": "Est-ce que vous pouvez", "tag": "question_est_ce_que", "note": "Est-ce que + normal word order: the neutral way to ask; Spanish has no equivalent marker."},
+          {"span": "vous", "tag": "vouvoiement", "note": "Vous for one person you don't know well. Choose it by the relationship, not because the Spanish used usted."},
+          {"span": "Je ne pense pas", "tag": "negation_complete", "note": "Polite everyday speech usually keeps the ne."}
+        ]
+      },
+      "amical": {
+        "text": "Tu peux m'envoyer le fichier avant vendredi ? Je pense pas avoir le temps ce week-end.",
+        "annotations": [
+          {"span": "Tu peux", "tag": "tutoiement", "note": "Tu with friends and peers; the verb takes the 2nd person singular (peux)."},
+          {"span": "Tu peux", "tag": "sujet_obligatoire", "note": "Spanish says ¿Puedes…? with no pronoun; French needs it: tu peux."},
+          {"span": "Tu peux m'envoyer", "tag": "question_intonation", "note": "Statement word order with rising intonation, exactly as in Spanish."},
+          {"span": "Je pense pas", "tag": "ne_omis", "note": "In casual speech ne is usually dropped; pas alone carries the negation."}
+        ]
+      },
+      "familier": {
+        "text": "Tu peux m'envoyer le fichier avant vendredi stp ? J'pense pas avoir le temps ce week-end.",
+        "annotations": [
+          {"span": "stp", "tag": "abreviation_sms", "note": "Short for s'il te plaît (tu form); the vous form is svp."},
+          {"span": "J'pense", "tag": "elision_orale", "note": "Je becomes J' before a consonant, mimicking pronunciation; only in very informal writing."},
+          {"span": "J'pense pas", "tag": "ne_omis", "note": "No ne, as in speech."}
+        ]
+      }
+    }
+  }
+}

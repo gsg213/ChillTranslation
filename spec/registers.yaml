@@ -1,0 +1,150 @@
+# Register specification — DRAFT v2, Spanish → French (review, then freeze on day 1)
+#
+# Every prose rule below has a machine-checkable counterpart under `profile`,
+# consumed by src/registre/rules.py. If you add a rule you cannot check
+# automatically, say so in `judge_only` so the eval knows to use the LLM judge.
+#
+# Source: Spanish, any variety. Target: French as spoken/written in France.
+
+spec_version: 2
+
+conventions:
+  output: >
+    All four registers are always produced, whatever the source's own register.
+  source_formality: >
+    Tú / usted / vos in the source is a hint about the relationship, not an
+    instruction: the pronouns do not map one-to-one onto tu / vous, and their
+    use varies across Spanish varieties. Report what the source uses in
+    `source_address`; never let it override a register's profile.
+  hidden_address: >
+    Spanish often marks the addressee only in the verb ending, and usted takes
+    3rd-person verbs ("¿Puede venir?" = usted, él or ella). When the source is
+    ambiguous, set source_address to "ambiguous" and record the reading chosen
+    in `assumptions`.
+  addressee: >
+    The addressee is one person unless the source is clearly plural (ustedes,
+    vosotros). If plural, every register uses "vous" (tag: vous_pluriel) and
+    registers differ through the other features. Record the assumption.
+  speaker_gender: >
+    Taken from the input field `speaker_gender`. Agreement follows it
+    (fatigué / fatiguée).
+  addressee_gender: >
+    Spanish often shows it (cansado / cansada); keep it when the source does.
+    Otherwise prefer wording that avoids agreement, or use the masculine default
+    and record the assumption.
+  no_addressee: >
+    If the source addresses no one (e.g. "Está lloviendo"), registers may differ
+    only through lexicon, negation or contractions, and some variants may
+    legitimately be identical. Such items are excluded from the collapse metric.
+  meaning: >
+    Variants must say the same thing as the source. The only additions allowed
+    are politeness formulas required by the register (s'il vous plaît, stp).
+  typography: >
+    Use a plain space before ? ! : ; (normalised before evaluation).
+
+# Profile semantics (implemented in src/registre/rules.py, tested in tests/test_rules.py):
+#   forbidden — must not appear.
+#   allowed   — may appear.
+#   expected  — must appear wherever the sentence offers a slot for it:
+#               ne_drop: any negation (so a kept "ne" is a violation);
+#               oral_contractions: "tu es", "tu as", "il y a", "il n'y a" written in full.
+#               No slot → nothing to check.
+#   question_forms (one per question sentence):
+#     inversion    Pouvez-vous… ? / A-t-il… ?        (verb-hyphen-subject pronoun)
+#     est_ce_que   Est-ce que vous… ? / Qu'est-ce que…
+#     wh_fronted   Où est la gare ? / Où se trouve…  (question word first, no subject pronoun right after)
+#     wh_svo       Pourquoi tu pars ?                (question word first, then subject pronoun: spoken)
+#     in_situ      Tu vas où ? / C'est où, la gare ? (question word later in the sentence)
+#     intonation   Tu peux m'aider ?                 (none of the above)
+
+# Mapping to CoCoA-MT human references (joined ES/FR test set):
+#   CoCoA's en-es and en-fr sets share most English sources; joining on the
+#   English text gives items with Spanish formal/informal AND French
+#   formal/informal references. Both Spanish versions are used as sources.
+#   Spanish references are Peninsular (vosotros in informal plurals).
+#   CoCoA French "formal"   ↔ courant
+#   CoCoA French "informal" ↔ amical  (minimal edits: tu swapped in, "ne" kept —
+#                                     use for tu/vous accuracy; treat COMET
+#                                     against them with caution.)
+
+registers:
+  - id: soutenu
+    label: Formal (written)
+    use_when: Emails to administration, a manager or professor you don't know well, official requests.
+    profile:
+      address: vous            # tu | vous | any
+      ne_drop: forbidden       # forbidden | allowed | expected
+      question_forms: [inversion, est_ce_que, wh_fronted]
+      oral_contractions: forbidden              # t'es, y a, chuis, j'pense...
+      sms_abbreviations: forbidden
+      colloquial_lexicon: forbidden
+    judge_only:
+      - Prefers cela over ça, nous over on, elevated verbs where natural (souhaiter, se rendre).
+      - Conditional of politeness for requests (pourriez-vous, je souhaiterais).
+    examples:
+      - es: ¿Me puedes enviar el archivo?
+        fr: Pourriez-vous m'envoyer le fichier ?
+      - es: No sé si puedo venir mañana.
+        fr: Je ne sais pas si je pourrai venir demain.
+      - es: ¿Dónde está la estación?
+        fr: Où se trouve la gare ?
+
+  - id: courant
+    label: Polite everyday
+    use_when: Speaking to a shopkeeper, a neighbour, a colleague you vouvoie, a stranger.
+    profile:
+      address: vous
+      ne_drop: forbidden
+      question_forms: [est_ce_que, inversion, intonation, wh_fronted, wh_svo]
+      oral_contractions: forbidden
+      sms_abbreviations: forbidden
+      colloquial_lexicon: forbidden
+    judge_only:
+      - Neutral vocabulary; ça and on are fine.
+    examples:
+      - es: ¿Me puedes enviar el archivo?
+        fr: Est-ce que vous pouvez m'envoyer le fichier ?
+      - es: No sé si puedo venir mañana.
+        fr: Je ne sais pas si je peux venir demain.
+      - es: ¿Dónde está la estación?
+        fr: Où est la gare ?
+
+  - id: amical
+    label: Friendly (spoken)
+    use_when: Friends, close colleagues, people your age in a relaxed setting.
+    profile:
+      address: tu
+      ne_drop: allowed
+      question_forms: [intonation, est_ce_que, in_situ, wh_fronted, wh_svo]   # inversion sounds odd with tu
+      oral_contractions: allowed                 # light ones: t'as, t'es, y a
+      sms_abbreviations: forbidden
+      colloquial_lexicon: allowed                # boulot, sympa, truc
+    judge_only:
+      - Sounds like natural speech, not like a formal sentence with tu swapped in.
+    examples:
+      - es: ¿Me puedes enviar el archivo?
+        fr: Tu peux m'envoyer le fichier ?
+      - es: No sé si puedo venir mañana.
+        fr: Je sais pas si je peux venir demain.
+      - es: ¿Dónde está la estación?
+        fr: Elle est où, la gare ?
+
+  - id: familier
+    label: Texting with close friends
+    use_when: Messages to close friends; written the way people actually text.
+    profile:
+      address: tu
+      ne_drop: expected
+      question_forms: [intonation, in_situ, wh_fronted, wh_svo]
+      oral_contractions: expected                # t'es, t'as, y a (j'sais, chuis allowed)
+      sms_abbreviations: allowed                 # max 2 per message: stp, bcp, jsp, mdr
+      colloquial_lexicon: allowed
+    judge_only:
+      - Still readable for a learner — at most two abbreviations, verlan only if very common (ouf, relou, chelou).
+    examples:
+      - es: ¿Me puedes enviar el archivo?
+        fr: Tu peux m'envoyer le fichier stp ?
+      - es: No sé si puedo venir mañana.
+        fr: J'sais pas si j'peux venir demain.
+      - es: ¿Dónde está la estación?
+        fr: C'est où la gare ?

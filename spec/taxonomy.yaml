@@ -1,0 +1,272 @@
+# Annotation tag taxonomy — DRAFT v2, Spanish → French (review, trim, then freeze on day 1)
+#
+# check: how presence/correctness of a tag can be verified at eval time
+#   rule    — regex / surface pattern in src/registre/rules.py (may look at the Spanish source too)
+#   lexicon — word or word-pair list lookup
+#   spacy   — morphological features (noisy on colloquial text)
+#   judge   — needs the LLM judge or a human
+#
+# es_contrast: true when Spanish works differently, i.e. where a Spanish speaker
+# is most likely to go wrong. The prompt asks the model to prioritise these.
+#
+# Rows in the dataset record taxonomy_version; changing ids after day 2 means
+# regenerating data.
+
+taxonomy_version: 2
+
+tags:
+  # --- Address -------------------------------------------------------------
+  - id: tutoiement
+    category: address
+    description: Informal tu for one person (friends, family, peers); verb in 2nd person singular.
+    example: Tu viens ce soir ?
+    check: rule
+    es_contrast: false
+  - id: vouvoiement
+    category: address
+    description: Polite vous for one person. Chosen by the relationship, not by whether the Spanish used usted.
+    example: Vous venez ce soir ?
+    check: rule
+    es_contrast: true
+  - id: vous_pluriel
+    category: address
+    description: Plural vous for several people in every register; covers both ustedes and vosotros.
+    example: ¿Venís todos? → Vous venez tous ?
+    check: judge
+    es_contrast: true
+
+  # --- Spanish interference --------------------------------------------------
+  - id: sujet_obligatoire
+    category: es_interference
+    description: French verbs need an explicit subject; Spanish drops it.
+    example: ¿Puedes venir? → Tu peux venir ?
+    check: spacy
+    es_contrast: true
+  - id: partitif
+    category: es_interference
+    description: French needs du / de la / des where Spanish uses no article; after a negation they become de.
+    example: Quiero pan. → Je veux du pain. / Je ne veux pas de pain.
+    check: rule
+    es_contrast: true
+  - id: auxiliaire_etre
+    category: es_interference
+    description: Motion/change-of-state and reflexive verbs take être in compound tenses; Spanish always uses haber.
+    example: He ido. → Je suis allé.
+    check: rule
+    es_contrast: true
+  - id: genre_divergent
+    category: es_interference
+    description: Noun whose gender differs between Spanish and French.
+    example: la leche → le lait, el mar → la mer, la nariz → le nez
+    check: lexicon
+    es_contrast: true
+  - id: a_personnel
+    category: es_interference
+    description: The Spanish personal a before a human direct object has no French equivalent.
+    example: Veo a María. → Je vois Marie.
+    check: judge
+    es_contrast: true
+  - id: aimer_gustar
+    category: es_interference
+    description: Gustar has the liked thing as subject; French aimer has the person as subject.
+    example: Me gusta el chocolate. → J'aime le chocolat.
+    check: rule
+    es_contrast: true
+  - id: duree_depuis
+    category: es_interference
+    description: Llevar + duration / hace … que becomes depuis, ça fait … que or il y a … que.
+    example: Llevo dos años aquí. → Je suis ici depuis deux ans.
+    check: rule
+    es_contrast: true
+  - id: faux_ami_es
+    category: es_interference
+    description: Spanish word whose French look-alike means something else.
+    example: embarazada → enceinte (embarrassée = avergonzada); constipado → enrhumé; largo → long (large = ancho)
+    check: lexicon
+    es_contrast: true
+  - id: calque_espagnol
+    category: es_interference
+    description: Literal copy of a Spanish structure that is non-standard in French.
+    example: Me duele la cabeza. → J'ai mal à la tête. (not *Me fait mal la tête)
+    check: judge
+    es_contrast: true
+
+  # --- Negation ------------------------------------------------------------
+  - id: ne_omis
+    category: negation
+    description: Spoken French drops ne; pas alone carries the negation. Avoid when you vouvoie in writing.
+    example: Je sais pas.
+    check: rule
+    es_contrast: true
+  - id: negation_complete
+    category: negation
+    description: Both parts of the negation are kept (ne … pas / jamais / rien / plus); Spanish needs only no.
+    example: No sé. → Je ne sais pas.
+    check: rule
+    es_contrast: true
+  - id: ne_expletif
+    category: negation
+    description: Non-negative ne in careful French after avant que, à moins que, de peur que, or comparatives.
+    example: Partez avant qu'il ne pleuve.
+    check: rule
+    es_contrast: true
+
+  # --- Questions -----------------------------------------------------------
+  - id: question_inversion
+    category: questions
+    description: Verb-hyphen-subject order; careful or written style. Adds -t- between vowels.
+    example: Pouvez-vous m'aider ? / A-t-il fini ?
+    check: rule
+    es_contrast: true
+  - id: question_est_ce_que
+    category: questions
+    description: Est-ce que + normal word order; the neutral way to ask. No Spanish equivalent.
+    example: Est-ce que vous pouvez m'aider ?
+    check: rule
+    es_contrast: true
+  - id: question_intonation
+    category: questions
+    description: Statement word order, question marked only by intonation (or ?), as in Spanish.
+    example: Tu peux m'aider ?
+    check: rule
+    es_contrast: false
+  - id: interrogatif_in_situ
+    category: questions
+    description: Question word left at the end instead of fronted; typical of speech.
+    example: ¿Adónde vas? → Tu vas où ?
+    check: rule
+    es_contrast: true
+
+  # --- Mood and tense ------------------------------------------------------
+  - id: conditionnel_politesse
+    category: mood_tense
+    description: Conditional used to soften a request or wish, as with Spanish podría / quisiera.
+    example: Je voudrais un café. / Pourriez-vous… ?
+    check: spacy
+    es_contrast: false
+  - id: subjonctif
+    category: mood_tense
+    description: French uses the subjunctive less than Spanish. Cuando + subj → quand + futur; esperar que + subj → espérer que + indicatif.
+    example: Cuando venga… → Quand il viendra… / Espero que venga. → J'espère qu'il viendra.
+    check: spacy
+    es_contrast: true
+  - id: passe_compose_imparfait
+    category: mood_tense
+    description: Spoken French uses the passé composé where Spanish uses the pretérito indefinido; the passé simple is literary. Imparfait ≈ imperfecto.
+    example: Ayer fui al cine. → Hier, je suis allé au cinéma.
+    check: judge
+    es_contrast: true
+
+  # --- Pronouns ------------------------------------------------------------
+  - id: on_nous
+    category: pronouns
+    description: On used to mean nous in everyday speech; verb in 3rd person singular.
+    example: Vamos. → On y va.
+    check: judge
+    es_contrast: true
+  - id: clitiques_ordre
+    category: pronouns
+    description: Order of object pronouns; with two of them French order can differ from Spanish.
+    example: Se lo doy. → Je le lui donne.
+    check: judge
+    es_contrast: true
+  - id: en_y
+    category: pronouns
+    description: En replaces de + noun (quantities); y replaces à + thing or a place. No Spanish equivalent.
+    example: Quiero dos. → J'en veux deux. / Voy (allí). → J'y vais.
+    check: rule
+    es_contrast: true
+  - id: ca_cela
+    category: pronouns
+    description: Ça in speech and everyday writing, cela in formal writing.
+    example: Ça marche. / Cela me convient.
+    check: rule
+    es_contrast: false
+
+  # --- Syntax --------------------------------------------------------------
+  - id: dislocation
+    category: syntax
+    description: Topic moved to the edge of the sentence and picked up by a pronoun; very spoken.
+    example: Moi, je trouve que… / Elle est où, la gare ?
+    check: judge
+    es_contrast: false
+  - id: c_est_il_est
+    category: syntax
+    description: C'est + determiner + noun vs il/elle est + bare noun or adjective; Spanish uses es for both.
+    example: Es médico. → Il est médecin. / C'est un bon médecin.
+    check: judge
+    es_contrast: true
+
+  # --- Spoken forms --------------------------------------------------------
+  - id: elision_orale
+    category: spoken_forms
+    description: Pronunciation written out in informal texts (t'es, t'as, y a, j'sais, chuis).
+    example: Chuis crevé, t'es où ?
+    check: lexicon
+    es_contrast: false
+  - id: abreviation_sms
+    category: spoken_forms
+    description: Texting abbreviations; stp is the tu form, svp the vous form.
+    example: stp, bcp, jsp, mdr
+    check: lexicon
+    es_contrast: false
+
+  # --- Lexicon -------------------------------------------------------------
+  - id: lexique_familier
+    category: lexicon
+    description: Colloquial vocabulary with a neutral equivalent.
+    example: boulot (travail), bouquin (livre), bagnole (voiture), bosser (travailler)
+    check: lexicon
+    es_contrast: false
+  - id: lexique_soutenu
+    category: lexicon
+    description: Elevated vocabulary typical of formal writing.
+    example: souhaiter, se rendre, désormais, obtenir
+    check: judge
+    es_contrast: false
+  - id: verlan
+    category: lexicon
+    description: Syllable-inversion slang; only well-established forms.
+    example: ouf (fou), relou (lourd), chelou (louche)
+    check: lexicon
+    es_contrast: false
+  - id: expression_idiomatique
+    category: lexicon
+    description: Idiom rendered by a French equivalent rather than word for word.
+    example: Estar en las nubes. → Être dans la lune. / Me da igual. → Ça m'est égal.
+    check: judge
+    es_contrast: true
+
+  # --- Politeness and discourse --------------------------------------------
+  - id: formule_politesse
+    category: politeness
+    description: Fixed politeness formulas.
+    example: Je vous prie de bien vouloir… / Veuillez… / s'il vous plaît
+    check: rule
+    es_contrast: false
+  - id: marqueur_discursif
+    category: politeness
+    description: Spoken discourse markers that structure or soften speech.
+    example: bon, ben, du coup, genre, en fait, quoi
+    check: lexicon
+    es_contrast: false
+
+  # --- Agreement and grammar -----------------------------------------------
+  - id: accord_genre
+    category: grammar
+    description: Adjective or participle agrees with the speaker's or addressee's gender.
+    example: Estoy cansada. → Je suis fatiguée.
+    check: judge
+    es_contrast: false
+  - id: accord_participe
+    category: grammar
+    description: Past participle agrees with the subject (être) or a preceding direct object (avoir); Spanish participles with haber never agree.
+    example: Las he perdido. → Je les ai perdues.
+    check: judge
+    es_contrast: true
+  - id: preposition
+    category: grammar
+    description: Preposition choice with places (à, en, au) or required by a verb, often different from Spanish.
+    example: en París → à Paris; pensar en → penser à
+    check: judge
+    es_contrast: true

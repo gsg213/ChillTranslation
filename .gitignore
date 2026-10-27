@@ -1,0 +1,13 @@
+# data and artifacts live on the HF Hub / S3, not in git
+data/
+outputs/
+wandb/
+*.parquet
+*.safetensors
+
+# environment
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+.ruff_cache/
