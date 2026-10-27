@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+# Host-side entry point. Needs only Docker (with the compose plugin) and a POSIX shell.
+# Usage: ./run <target> [args]     e.g. ./run setup | ./run test | ./run shell
+set -eu
+cd "$(dirname "$0")"
+
+# Passed to the image build so the container user matches you.
+# (Not UID/GID: bash treats UID as read-only.)
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+export HOST_UID HOST_GID
+
+cmd="${1:-help}"
+[ $# -gt 0 ] && shift
+
+case "$cmd" in
+  build)     docker compose build dev ;;
+  setup)     docker compose build dev
+             docker compose run --rm dev uv sync --all-groups
+             git config core.hooksPath .githooks
+             [ -f .env ] || cp .env.example .env
+             echo "Setup done. Fill in .env, then: ./run test-schema" ;;
+  shell)     docker compose run --rm dev bash ;;
+  gpu-check) docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi ;;
+  vllm-up)   docker compose --profile gpu up -d vllm
+             echo "Started. Follow the startup log with: ./run vllm-logs" ;;
+  vllm-logs) docker compose --profile gpu logs -f vllm ;;
+  vllm-down) docker compose --profile gpu down ;;
+  clean)     docker compose --profile gpu down -v ;;   # also deletes volumes (venv, caches)
+  *)         docker compose run --rm dev make "$cmd" "$@" ;;   # everything else: Makefile, in the container
+esac

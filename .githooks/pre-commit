@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Lint + schema tests in the dev container before each commit.
+# Skip once with: git commit --no-verify
+exec ./run precommit

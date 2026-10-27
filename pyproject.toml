@@ -10,21 +10,22 @@ dependencies = [
   "pyarrow>=15",
   "datasketch>=1.6",
   "spacy>=3.7,<4",
-  "huggingface-hub>=0.24",
+  "huggingface-hub>=0.34",   # provides the `hf` CLI
   "wandb>=0.17",
+  "openai>=1.40",            # client for vLLM's OpenAI-compatible server
+  # spaCy Spanish model, pinned as a wheel (spacy download needs pip, which uv envs lack)
+  "es_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl",
 ]
 
-[project.optional-dependencies]
-# Only on machines with an NVIDIA GPU (Grid5000 nodes, the RTX 3090 PC).
-# Pin the exact version per machine once you know which one works with its CUDA driver.
-gpu = ["vllm"]
-
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6", "pre-commit>=3.7"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true   # needed for the spaCy model URL above
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/registre"]

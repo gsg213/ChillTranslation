@@ -36,3 +36,8 @@ Decisions are hypotheses — if later evidence contradicts one, add a new entry;
 - Tie-breaker:
 - Disqualifier:
 - Result and choice:
+
+## D7 — Everything in containers
+- Host needs only Docker (and, on GPU machines, the NVIDIA driver + container toolkit).
+- Dev tools run in the `dev` image (./run <target>); serving runs in the official vLLM image.
+- Why: nothing installed on my machines, and the same environment everywhere.

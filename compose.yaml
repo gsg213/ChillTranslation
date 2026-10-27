@@ -1,0 +1,54 @@
+# Everything runs in containers. From the host, use ./run <target>.
+services:
+  dev:
+    build:
+      context: .
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+    image: registre-dev
+    working_dir: /app
+    volumes:
+      - .:/app                                   # your code, edited on the host
+      - venv:/opt/venv                           # Python packages (survive container restarts)
+      - uv-cache:/opt/uv-cache                   # download cache, makes re-syncs fast
+      - hf-cache-dev:/home/dev/.cache/huggingface
+    env_file:
+      - path: .env
+        required: false
+    # Podman (rootless): uncomment so files keep your ownership
+    # userns_mode: keep-id
+
+  vllm:
+    image: vllm/vllm-openai:${VLLM_TAG:-set-VLLM_TAG-in-.env}
+    profiles: [gpu]                              # only started explicitly (./run vllm-up)
+    ipc: host                                    # PyTorch needs shared memory
+    ports:
+      - "127.0.0.1:8000:8000"                    # reachable from this machine only
+    volumes:
+      - hf-cache-vllm:/root/.cache/huggingface   # model weights, downloaded once
+    env_file:
+      - path: .env
+        required: false
+    command:
+      - --model
+      - ${SMOKE_MODEL:-Qwen/Qwen2.5-0.5B-Instruct}
+      - --max-model-len
+      - "4096"
+      - --gpu-memory-utilization
+      - "${GPU_MEM_UTIL:-0.8}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # Podman: replace the deploy block with
+    # devices: [nvidia.com/gpu=all]
+
+volumes:
+  venv:
+  uv-cache:
+  hf-cache-dev:
+  hf-cache-vllm:
