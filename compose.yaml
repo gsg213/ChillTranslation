@@ -20,7 +20,12 @@ services:
     # userns_mode: keep-id
 
   vllm:
-    image: vllm/vllm-openai:${VLLM_TAG:-set-VLLM_TAG-in-.env}
+    build:                                       # official image + one fix, see Dockerfile.vllm
+      context: .
+      dockerfile: Dockerfile.vllm
+      args:
+        VLLM_TAG: ${VLLM_TAG:-set-VLLM_TAG-in-.env}
+    image: registre-vllm:${VLLM_TAG:-unset}
     profiles: [gpu]                              # only started explicitly (./run vllm-up)
     ipc: host                                    # PyTorch needs shared memory
     ports:

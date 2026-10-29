@@ -1,0 +1,11 @@
+# Serving image: the official vLLM image, minus torchcodec.
+#
+# Why: the CUDA 12.9 variants (-cu129) of vLLM v0.30/v0.31 ship a torchcodec compiled for
+# CUDA 13 (it needs libnvrtc.so.13, which a CUDA 12.9 image doesn't have). vLLM imports it at
+# startup to decode audio/video inputs and crashes with "Could not load ... libtorchcodec_image.so".
+# vLLM treats torchcodec as optional (a missing package raises ImportError, which it catches),
+# and this project is text-only, so removing it is safe.
+# Once the host driver is >= 580 you can use the default CUDA 13 tags and drop this file.
+ARG VLLM_TAG
+FROM vllm/vllm-openai:${VLLM_TAG}
+RUN uv pip uninstall --system torchcodec || pip uninstall -y torchcodec

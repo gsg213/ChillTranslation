@@ -64,6 +64,12 @@ def test_address(text, expected):
         ("Il est plus grand que moi.", 0, 0),  # trap: comparative plus
         ("J'ai pas mal de travail.", 0, 0),  # trap: "pas mal de" = a lot of
         ("Si jamais tu viens, appelle-moi.", 0, 0),  # trap: "si jamais" = if ever
+        # Regressions found by running the checker on CoCoA's human references:
+        ("Vous avez fait pas mal d'économies.", 0, 0),  # "pas mal d'" (elided)
+        ("Pas de problème.", 0, 0),  # verbless: no ne to drop
+        ("Pas d'autre question ?", 0, 0),
+        ("Sûrement pas.", 0, 0),
+        ("Je sais pas si ça marche ou pas.", 0, 1),  # "ou pas" ignored, "je sais pas" counts
     ],
 )
 def test_negation(text, kept, dropped):
@@ -95,6 +101,11 @@ def test_negative_subject_is_not_dropped_ne():
         ("C'est où, la gare ?", ["in_situ"]),
         ("Il viendra peut-être demain.", []),  # not a question; trap: peut-être
         ("Tu peux m'envoyer le fichier ? Je pense pas avoir le temps.", ["intonation"]),
+        # Regressions found on CoCoA's human references:
+        ("Alors, où se situent vos locaux ?", ["wh_fronted"]),  # leading filler
+        ("Eh bien, quel âge a votre petit-fils ?", ["wh_fronted"]),
+        ("D'où vient votre famille ?", ["wh_fronted"]),  # preposition + question word
+        ("Je me suis dit : « Quelle carrière ?", ["wh_fronted"]),  # reported speech
     ],
 )
 def test_question_forms(text, forms):
@@ -114,6 +125,7 @@ def test_question_forms(text, forms):
         ("Il y a un problème.", 0),
         ("Il n'y a pas de souci.", 0),  # trap: "y a" inside "n'y a"
         ("Y a un problème.", 1),
+        ("Y a-t-il autre chose ?", 0),  # regression: formal inversion of "il y a"
     ],
 )
 def test_oral_contractions(text, n):
@@ -126,6 +138,15 @@ def test_oral_contractions(text, n):
 )
 def test_contraction_slots(text, has_slot):
     assert bool(features(text).contraction_slots) == has_slot
+
+
+def test_typographic_apostrophes_and_spaces():
+    # LLM output often uses ’ and a narrow no-break space before "?"
+    assert features("T’es où\u202f?").oral_contractions == ["T'es"]
+    assert features("T’es où\u202f?").question_forms == ["in_situ"]
+    f = features("Je n’ai rien vu.")
+    assert (f.ne_kept, f.ne_dropped) == (1, 0)
+    assert features("Je t’aime.").address == "tu"
 
 
 def test_sms_and_colloquial():

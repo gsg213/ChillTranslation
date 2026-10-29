@@ -34,3 +34,6 @@ smoke:         ## structured-output check against the vllm service (./run vllm-u
 
 upload-data:   ## push data/processed to a private HF dataset repo (HF_DATASET_REPO in .env)
 	uv run hf upload $(HF_DATASET_REPO) data/processed . --repo-type dataset --private
+
+card:          ## refresh the generated tables in DATA_CARD.md (after ./run data)
+	uv run python scripts/data_card.py
