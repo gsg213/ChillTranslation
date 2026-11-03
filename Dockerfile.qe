@@ -1,0 +1,15 @@
+# CometKiwi (translation quality estimation) in its own image.
+#
+# Why separate: unbabel-comet pins numpy<2, transformers<5 and huggingface-hub<1, which conflict
+# with the dev environment and with vLLM. Its own image keeps those pins away from everything else.
+# torch 2.5.1 from PyPI bundles the CUDA 12.4 runtime, which runs on any driver that supports
+# CUDA >= 12.4 (yours: 12.7), and on CPU if there is no GPU.
+FROM python:3.11-slim
+
+COPY docker/qe.requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Writable by any user: the container runs as you (see compose.yaml) so its output files are yours.
+RUN mkdir -p /hf-cache && chmod 777 /hf-cache
+ENV HF_HOME=/hf-cache HOME=/tmp PYTHONUNBUFFERED=1
+WORKDIR /app

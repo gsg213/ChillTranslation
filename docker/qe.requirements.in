@@ -1,0 +1,4 @@
+unbabel-comet==2.2.7
+torch==2.5.1  # CUDA 12.4 build: runs on any driver >= 12.4, no NVIDIA_REQUIRE check
+pandas
+pyarrow
