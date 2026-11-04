@@ -1,6 +1,6 @@
 import json
 
-from registre.generate import parse_args, read_jsonl, run
+from registre.generate import llm_kwargs, parse_args, read_jsonl, run
 from registre.schema import SPEC_DIR
 
 GOLDEN = json.loads((SPEC_DIR / "golden_example.json").read_text())["output"]
@@ -57,3 +57,12 @@ def test_split_filter(tmp_path):
     argv = ["--model", "m", "--inputs", str(_inputs(tmp_path, 6)), "--out", str(out)]
     run(parse_args([*argv, "--split", "val"]), FakeBackend())
     assert [r["id"] for r in read_jsonl(out)] == ["x1", "x3", "x5"]
+
+
+def test_mistral_and_text_only_flags():
+    plain = llm_kwargs(parse_args(["--model", "m"]))
+    assert "tokenizer_mode" not in plain and "limit_mm_per_prompt" not in plain
+    mistral = llm_kwargs(parse_args(["--model", "m", "--mistral-format", "--text-only"]))
+    assert mistral["tokenizer_mode"] == mistral["config_format"] == mistral["load_format"]
+    assert mistral["tokenizer_mode"] == "mistral"
+    assert mistral["limit_mm_per_prompt"] == {"image": 0}

@@ -40,6 +40,28 @@ def append_jsonl(path: Path, rows: list[dict]) -> None:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def llm_kwargs(args: argparse.Namespace) -> dict:
+    """Arguments for vllm.LLM. Mistral models ship their own config/tokenizer format
+    (--mistral-format); Ministral 3 is multimodal, and --text-only stops vLLM reserving
+    GPU memory for images this project never sends."""
+    kwargs = {
+        "model": args.model,
+        "tensor_parallel_size": args.tp,
+        "max_model_len": args.max_model_len,
+        "gpu_memory_utilization": args.gpu_mem,
+        "seed": args.seed,
+    }
+    if args.mistral_format:
+        kwargs |= {
+            "tokenizer_mode": "mistral",
+            "config_format": "mistral",
+            "load_format": "mistral",
+        }
+    if args.text_only:
+        kwargs["limit_mm_per_prompt"] = {"image": 0}
+    return kwargs
+
+
 class VLLMBackend:
     """Offline batch inference: vLLM schedules the whole batch itself (continuous batching)."""
 
@@ -47,13 +69,7 @@ class VLLMBackend:
         from vllm import LLM, SamplingParams
         from vllm.sampling_params import StructuredOutputsParams
 
-        self.llm = LLM(
-            model=args.model,
-            tensor_parallel_size=args.tp,
-            max_model_len=args.max_model_len,
-            gpu_memory_utilization=args.gpu_mem,
-            seed=args.seed,
-        )
+        self.llm = LLM(**llm_kwargs(args))
         guided = StructuredOutputsParams(json=json_schema()) if args.guided else None
         self.params = SamplingParams(
             temperature=args.temperature,
@@ -194,6 +210,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     # vllm backend
     p.add_argument("--tp", type=int, default=1, help="tensor parallel size (number of GPUs)")
+    p.add_argument(
+        "--mistral-format",
+        action="store_true",
+        help="Mistral checkpoints: load with Mistral's own config/tokenizer format",
+    )
+    p.add_argument(
+        "--text-only", action="store_true", help="multimodal models: reserve no memory for images"
+    )
     p.add_argument("--max-model-len", type=int, default=8192)
     p.add_argument("--gpu-mem", type=float, default=0.9)
     # openai backend

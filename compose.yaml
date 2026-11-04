@@ -35,13 +35,12 @@ services:
     env_file:
       - path: .env
         required: false
-    command:
-      - --model
-      - ${SMOKE_MODEL:-Qwen/Qwen2.5-0.5B-Instruct}
-      - --max-model-len
-      - "4096"
-      - --gpu-memory-utilization
-      - "${GPU_MEM_UTIL:-0.8}"
+    # A string, so VLLM_EXTRA_ARGS from .env can add flags (split like a shell command line).
+    command: >-
+      --model ${SMOKE_MODEL:-Qwen/Qwen2.5-0.5B-Instruct}
+      --max-model-len ${MAX_MODEL_LEN:-4096}
+      --gpu-memory-utilization ${GPU_MEM_UTIL:-0.8}
+      ${VLLM_EXTRA_ARGS:-}
     deploy:
       resources:
         reservations:
