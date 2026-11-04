@@ -11,8 +11,9 @@ dependencies = [
   "datasketch>=1.6",
   "spacy>=3.7,<4",
   "huggingface-hub>=0.34",   # provides the `hf` CLI
-  "wandb>=0.17",
-  "openai>=1.40",            # client for vLLM's OpenAI-compatible server
+  "wandb>=0.22.3",            # new-format W&B API keys need >= 0.22.3
+  "openai>=1.40",
+  "sacrebleu>=2.4",           # chrF for the collapse check            # client for vLLM's OpenAI-compatible server
   # spaCy Spanish model, pinned as a wheel (spacy download needs pip, which uv envs lack)
   "es_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl",
 ]

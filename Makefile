@@ -1,5 +1,6 @@
 # Runs INSIDE the dev container. From the host, call ./run <target>.
-.PHONY: help test test-schema lint format precommit schema download data smoke upload-data
+.PHONY: help test test-schema lint format precommit schema download data card smoke upload-data \
+        prompt teacher-inputs filter review-sheet review-score upload-teacher
 
 help:          ## list targets
 	@grep -E '^[a-z-]+:.*##' Makefile | sed -E 's/:.*## / — /'
@@ -29,11 +30,32 @@ download:      ## fetch Tatoeba + CoCoA-MT into data/raw
 data:          ## build processed splits (you write registre.data.build)
 	uv run python -m registre.data.build
 
+card:          ## refresh the generated tables in DATA_CARD.md (after ./run data)
+	uv run python scripts/data_card.py
+
 smoke:         ## structured-output check against the vllm service (./run vllm-up first)
 	uv run python scripts/smoke_vllm.py
 
 upload-data:   ## push data/processed to a private HF dataset repo (HF_DATASET_REPO in .env)
 	uv run hf upload $(HF_DATASET_REPO) data/processed . --repo-type dataset --private
 
-card:          ## refresh the generated tables in DATA_CARD.md (after ./run data)
-	uv run python scripts/data_card.py
+# ---- Day 2: teacher data --------------------------------------------------------------------
+
+prompt:        ## print the teacher/bake-off prompt and its hash
+	uv run python -m registre.prompt
+
+teacher-inputs: ## data/processed → data/teacher/inputs.jsonl (all splits)
+	uv run python -m registre.teacher.inputs
+
+filter:        ## filtering funnel; pilot: ./run filter ARGS="--raw data/teacher/pilot.jsonl"
+	uv run python -m registre.teacher.filters $(ARGS)
+
+review-sheet:  ## blind review sample → review/sheet.csv + review/key.csv
+	uv run python -m registre.teacher.review sheet
+
+review-score:  ## score the filled sheet → review/results.json (checkpoint 1)
+	uv run python -m registre.teacher.review score
+
+upload-teacher: ## push data/teacher to the HF dataset repo, under teacher/
+	uv run hf upload $(HF_DATASET_REPO) data/teacher teacher --repo-type dataset --private
+

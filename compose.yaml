@@ -52,7 +52,39 @@ services:
     # Podman: replace the deploy block with
     # devices: [nvidia.com/gpu=all]
 
+  languagetool:                                  # grammar checks for the day-2 filters
+    image: erikvl87/languagetool:${LT_TAG:-6.8}
+    profiles: [tools]                            # started with ./run lt-up
+    environment:
+      Java_Xms: 512m
+      Java_Xmx: 2g
+    # no ports: only other services reach it, at http://languagetool:8010
+
+  qe:                                            # CometKiwi quality estimation (./run qe)
+    build:
+      context: .
+      dockerfile: Dockerfile.qe
+    image: registre-qe
+    profiles: [gpu]
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"  # output files belong to you, not root
+    working_dir: /app
+    entrypoint: ["python", "scripts/qe.py"]
+    volumes:
+      - .:/app
+      - hf-cache-qe:/hf-cache
+    env_file:
+      - path: .env
+        required: false
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
 volumes:
+  hf-cache-qe:
   venv:
   uv-cache:
   hf-cache-dev:

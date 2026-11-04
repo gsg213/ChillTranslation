@@ -26,6 +26,10 @@ case "$cmd" in
              echo "Started. Follow the startup log with: ./run vllm-logs" ;;
   vllm-logs) docker compose --profile gpu logs -f vllm ;;
   vllm-down) docker compose --profile gpu down ;;
+  lt-up)     docker compose --profile tools up -d languagetool
+             echo "LanguageTool starting (takes ~20 s). Stop it with: ./run lt-down" ;;
+  lt-down)   docker compose --profile tools stop languagetool ;;
+  qe)        docker compose --profile gpu run --rm --build qe ;;
   clean)     docker compose --profile gpu down -v ;;   # also deletes volumes (venv, caches)
   *)         docker compose run --rm dev make "$cmd" "$@" ;;   # everything else: Makefile, in the container
 esac
